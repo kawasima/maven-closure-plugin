@@ -16,13 +16,15 @@ package org.dyndns.asakusabashi.maven_closure_plugin;
  * limitations under the License.
  */
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 
-import com.google.javascript.jscomp.CompilerRunner;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.google.javascript.jscomp.Compiler;
+import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.JSSourceFile;
 
 /**
  * compile javascripts by Google Closure Compiler
@@ -41,15 +43,31 @@ public class CompileMojo
     public void execute()
         throws MojoExecutionException
     {
+    	Compiler compiler = new Compiler();
+
     	for(PackagingSet packagingSet : packagingSets) {
-    		List<String> options = new ArrayList<String>();
-    		for(String include : packagingSet.getIncludes()) {
-    			options.add("--js");
-    			options.add(include);
+    		List<JSSourceFile> inputs = new ArrayList<JSSourceFile>();
+    		if (packagingSet.getIncludes() != null) {
+    			for(String include : packagingSet.getIncludes()) {
+    				JSSourceFile newFile = JSSourceFile.fromFile(include);
+    				inputs.add(newFile);
+    			}
     		}
-    		options.add("--js_output_file");
-    		options.add(packagingSet.getOutputFile().getPath());
-    		CompilerRunner.main(options.toArray(new String[0]));
+    		
+    		List<JSSourceFile> externs = new ArrayList<JSSourceFile>();
+    		if (packagingSet.getExterns() != null) {
+    			for(String extern : packagingSet.getExterns()) {
+    				JSSourceFile newFile = JSSourceFile.fromFile(extern);
+    				externs.add(newFile);
+    			}
+    		}
+    		
+    		CompilerOptions options = new CompilerOptions();
+    		options.jsOutputFile = packagingSet.getOutputFile().getPath();
+    		compiler.compile(
+    				  externs.toArray(new JSSourceFile[0])
+    				, inputs.toArray(new JSSourceFile[0])
+    				, options);
     	}
     }
 }
