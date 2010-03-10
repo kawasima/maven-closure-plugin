@@ -48,9 +48,10 @@ public class CompileMojo
     public void execute()
         throws MojoExecutionException
     {
-    	Compiler compiler = new Compiler();
 
     	for(PackagingSet packagingSet : packagingSets) {
+    		// I couldn't understand to reuse Compiler object.
+    		Compiler compiler = new Compiler();
     		List<JSSourceFile> inputs = new ArrayList<JSSourceFile>();
     		if (packagingSet.getIncludes() != null) {
     			for(String include : packagingSet.getIncludes()) {
